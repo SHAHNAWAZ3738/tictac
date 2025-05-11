@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+<title>Tic Tac Toe Game</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Itim&display=swap');
+
+  * {
+    box-sizing: border-box;
+  }
+
+  body {
+    background: #1e1e2f;
+    color: #eee;
+    margin: 0;
+    font-family: 'Itim', cursive;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    padding: 10px;
+  }
+
+  main {
+    background: #2a2a40;
+    border-radius: 15px;
+    padding: 20px;
+    width: 320px;
+    max-width: 90vw;
+    box-shadow: 0 6px 15px rgba(0,0,0,0.6);
+    user-select: none;
+  }
+
+  h1 {
+    text-align: center;
+    margin-bottom: 10px;
+    font-size: 2.4rem;
+    color: #ff6f61;
+  }
+
+  .display-player {
+    text-align: center;
+    font-size: 1.2rem;
+    margin-bottom: 15px;
+    font-weight: 600;
+    min-height: 24px;
+    color: #ffa07a;
+  }
+
+  #board {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+  }
+
+  .square {
+    aspect-ratio: 1 / 1;
+    background: #39395a;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 3.5rem;
+    cursor: pointer;
+    border-radius: 10px;
+    color: #ffc4b3;
+    transition: background-color 0.3s ease;
+    box-shadow: 0 4px 8px rgb(0 0 0 / 0.3);
+  }
+
+  .square:hover {
+    background-color: #555577;
+  }
+
+  .announcer {
+    text-align: center;
+    margin-top: 15px;
+    font-size: 1.25rem;
+    font-weight: bold;
+    color: #ffd700;
+    min-height: 28px;
+    min-width: 100%;
+  }
+
+  button#restartButton {
+    display: block;
+    margin: 25px auto 0 auto;
+    padding: 10px 30px;
+    font-size: 1.1rem;
+    font-weight: 600;
+    border: none;
+    border-radius: 25px;
+    background-color: #ff6f61;
+    color: white;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    box-shadow: 0 4px 8px rgb(0 0 0 / 0.25);
+  }
+
+  button#restartButton:hover {
+    background-color: #ff523f;
+  }
+
+  @media (max-width: 400px) {
+    main {
+      width: 100%;
+      padding: 15px;
+    }
+    .square {
+      font-size: 2.8rem;
+    }
+    button#restartButton {
+      padding: 10px 20px;
+      font-size: 1rem;
+    }
+  }
+</style>
+</head>
+<body>
+<main>
+  <h1>Tic Tac Toe</h1>
+  <div class="display-player">Player X's turn</div>
+  <div id="board" role="grid" aria-label="Tic Tac Toe Board">
+    <div class="square" role="button" aria-label="Square 1" tabindex="0" data-index="0"></div>
+    <div class="square" role="button" aria-label="Square 2" tabindex="0" data-index="1"></div>
+    <div class="square" role="button" aria-label="Square 3" tabindex="0" data-index="2"></div>
+    <div class="square" role="button" aria-label="Square 4" tabindex="0" data-index="3"></div>
+    <div class="square" role="button" aria-label="Square 5" tabindex="0" data-index="4"></div>
+    <div class="square" role="button" aria-label="Square 6" tabindex="0" data-index="5"></div>
+    <div class="square" role="button" aria-label="Square 7" tabindex="0" data-index="6"></div>
+    <div class="square" role="button" aria-label="Square 8" tabindex="0" data-index="7"></div>
+    <div class="square" role="button" aria-label="Square 9" tabindex="0" data-index="8"></div>
+  </div>
+  <div class="announcer" aria-live="polite"></div>
+  <button id="restartButton" type="button">Restart Game</button>
+</main>
+
+<script>
+  (() => {
+    const boardElement = document.getElementById('board');
+    const squares = Array.from(document.querySelectorAll('.square'));
+    const displayPlayer = document.querySelector('.display-player');
+    const announcer = document.querySelector('.announcer');
+    const restartButton = document.getElementById('restartButton');
+
+    const players = ['X', 'O'];
+    let currentPlayer = players[0];
+    let isGameActive = true;
+    let gameState = Array(9).fill('');
+
+    const winningConditions = [
+      [0,1,2],
+      [3,4,5],
+      [6,7,8],
+      [0,3,6],
+      [1,4,7],
+      [2,5,8],
+      [0,4,8],
+      [2,4,6]
+    ];
+
+    function handleResultValidation() {
+      let roundWon = false;
+      for(let i=0; i<winningConditions.length; i++){
+        const [a, b, c] = winningConditions[i];
+        if(gameState[a] === '' || gameState[b] === '' || gameState[c] === '') {
+          continue;
+        }
+        if(gameState[a] === gameState[b] && gameState[b] === gameState[c]) {
+          roundWon = true;
+          break;
+        }
+      }
+      if(roundWon) {
+        announce(currentPlayer === 'X' ? 'Player X Wins!' : 'Player O Wins!');
+        isGameActive = false;
+        return;
+      }
+      if(!gameState.includes('')) {
+        announce('It\'s a Tie!');
+        isGameActive = false;
+      }
+    }
+
+    function announce(message) {
+      announcer.textContent = message;
+      displayPlayer.textContent = '';
+    }
+
+    function isValidAction(square) {
+      return square.textContent === '' && isGameActive;
+    }
+
+    function updateBoard(index) {
+      gameState[index] = currentPlayer;
+    }
+
+    function changePlayer() {
+      currentPlayer = currentPlayer === 'X' ? 'O' : 'X';
+      displayPlayer.textContent = `Player ${currentPlayer}'s turn`;
+    }
+
+    function userAction(square, index) {
+      if(!isValidAction(square)) {
+        return;
+      }
+      square.textContent = currentPlayer;
+      updateBoard(index);
+      handleResultValidation();
+      if(isGameActive) {
+        changePlayer();
+      }
+    }
+
+    function resetGame() {
+      isGameActive = true;
+      currentPlayer = players[0];
+      gameState = Array(9).fill('');
+      announcer.textContent = '';
+      displayPlayer.textContent = `Player ${currentPlayer}'s turn`;
+      squares.forEach(square => (square.textContent = ''));
+    }
+
+    // event listeners for mouse click and keyboard enter/space key for accessibility
+    squares.forEach((square, index) => {
+      square.addEventListener('click', () => userAction(square, index));
+      square.addEventListener('keydown', e => {
+        if(e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          userAction(square, index);
+        }
+      });
+    });
+
+    restartButton.addEventListener('click', resetGame);
+  })();
+</script>
+</body>
+</html>
+
